@@ -1,0 +1,1753 @@
+{
+  "info": {
+    "_postman_id": "col-ecommerce-v2-001",
+    "name": "E-commerce v2 - Cenarios de Pagamento",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "ecommerce-v2"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "var requestName = pm.info.requestName;",
+          "console.log('Executando request: ' + requestName);",
+          "if (requestName === '1 - Login') {",
+          "    var allVars = [",
+          "        'token', 'userId', 'produtoId', 'produtoNome', 'produtoPreco',",
+          "        'endereco', 'cidade', 'estado', 'orderId', 'orderStatus',",
+          "        'paymentId', 'pixCode', 'boletoCode', 'trackingCode',",
+          "        'mockStatus', 'cenario', 'loginStatus', 'catalogoStatus',",
+          "        'enderecoStatus', 'pedidoStatus', 'pagamentoStatus', 'rastreioStatus'",
+          "    ];",
+          "    allVars.forEach(function(v) { pm.environment.unset(v); });",
+          "    console.log('Todas as variaveis foram limpas (limparTudo)');",
+          "} else {",
+          "    pm.environment.unset('mockStatus');",
+          "    pm.environment.unset('cenario');",
+          "    console.log('Variaveis de controle limpas (limparVariaveisDeControle)');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1 - Login",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var email = pm.environment.get('email');",
+              "var password = pm.environment.get('password');",
+              "var loginStatus = pm.environment.get('loginStatus');",
+              "",
+              "var emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;",
+              "if (!emailRegex.test(email)) {",
+              "    console.log('[AVISO] Email invalido: ' + email);",
+              "}",
+              "",
+              "var passwordRegex = /^(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%&*!])[A-Za-z\\d@#$%&*!]{8,}$/;",
+              "if (!passwordRegex.test(password)) {",
+              "    console.log('[AVISO] Senha nao atende aos requisitos de seguranca');",
+              "}",
+              "",
+              "if (loginStatus === 'falha') {",
+              "    pm.environment.set('mockStatus', '401');",
+              "    console.log('mockStatus definido para 401 (falha de login)');",
+              "} else {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    console.log('mockStatus definido para 200 (login sucesso)');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var status = pm.response.code;",
+              "var responseBody;",
+              "try { responseBody = pm.response.json(); } catch(e) { responseBody = {}; }",
+              "",
+              "if (status === 200) {",
+              "    pm.test('Status 200 - Login Sucesso', function() {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "    pm.test('Token JWT presente e valido', function() {",
+              "        pm.expect(responseBody).to.have.property('token');",
+              "        var jwtRegex = /^[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+$/;",
+              "        pm.expect(responseBody.token).to.match(jwtRegex);",
+              "    });",
+              "    pm.test('Usuario presente na resposta', function() {",
+              "        pm.expect(responseBody).to.have.property('user');",
+              "        pm.expect(responseBody.user).to.have.property('id');",
+              "    });",
+              "    pm.environment.set('token', responseBody.token);",
+              "    pm.environment.set('userId', responseBody.user.id);",
+              "    console.log('Token salvo: ' + responseBody.token);",
+              "    console.log('UserId salvo: ' + responseBody.user.id);",
+              "} else if (status === 401) {",
+              "    pm.test('Status 401 - Login Falha', function() {",
+              "        pm.response.to.have.status(401);",
+              "    });",
+              "    pm.test('Codigo de erro AUTH_INVALID_CREDENTIALS', function() {",
+              "        pm.expect(responseBody.code).to.eql('AUTH_INVALID_CREDENTIALS');",
+              "    });",
+              "    console.log('Login falhou: ' + responseBody.message);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-mock-response-code",
+            "value": "{{mockStatus}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "1 - Login Sucesso_200",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ecommerce.abc123def456\",\"user\":{\"id\":\"USR-20260225-001\",\"email\":\"cliente@ecommerce.com\",\"name\":\"Marcelo Rosa\"},\"expiresIn\":3600}"
+        },
+        {
+          "name": "1 - Login Falha_401",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"error\":\"Unauthorized\",\"message\":\"Email ou senha invalidos\",\"code\":\"AUTH_INVALID_CREDENTIALS\"}"
+        }
+      ]
+    },
+    {
+      "name": "2 - Catalogo de Produtos",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var token = pm.environment.get('token');",
+              "var catalogoStatus = pm.environment.get('catalogoStatus');",
+              "",
+              "var jwtRegex = /^[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+$/;",
+              "if (!token || !jwtRegex.test(token)) {",
+              "    console.log('[AVISO] Token JWT invalido ou ausente');",
+              "}",
+              "",
+              "if (catalogoStatus === 'falha') {",
+              "    pm.environment.set('mockStatus', '401');",
+              "    console.log('mockStatus definido para 401 (catalogo falha)');",
+              "} else {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    console.log('mockStatus definido para 200 (catalogo sucesso)');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var status = pm.response.code;",
+              "var responseBody;",
+              "try { responseBody = pm.response.json(); } catch(e) { responseBody = {}; }",
+              "",
+              "if (status === 200) {",
+              "    pm.test('Status 200 - Catalogo Sucesso', function() {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "    pm.test('Lista de produtos presente', function() {",
+              "        pm.expect(responseBody).to.have.property('products');",
+              "        pm.expect(responseBody.products).to.be.an('array');",
+              "        pm.expect(responseBody.products.length).to.be.above(0);",
+              "    });",
+              "    pm.test('IDs de produtos no formato PROD-NNN', function() {",
+              "        var prodIdRegex = /^PROD-\\d{3}$/;",
+              "        responseBody.products.forEach(function(p) {",
+              "            pm.expect(p.id).to.match(prodIdRegex);",
+              "        });",
+              "    });",
+              "    var firstProduct = responseBody.products[0];",
+              "    pm.environment.set('produtoId', firstProduct.id);",
+              "    pm.environment.set('produtoNome', firstProduct.name);",
+              "    pm.environment.set('produtoPreco', firstProduct.price.toString());",
+              "    console.log('Produto selecionado: ' + firstProduct.id + ' - ' + firstProduct.name);",
+              "} else if (status === 401) {",
+              "    pm.test('Status 401 - Token invalido', function() {",
+              "        pm.response.to.have.status(401);",
+              "    });",
+              "    pm.test('Codigo de erro AUTH_TOKEN_INVALID', function() {",
+              "        pm.expect(responseBody.code).to.eql('AUTH_TOKEN_INVALID');",
+              "    });",
+              "    console.log('Catalogo falhou: ' + responseBody.message);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "x-mock-response-code",
+            "value": "{{mockStatus}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "products"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "2 - Catalogo Sucesso_200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"products\":[{\"id\":\"PROD-001\",\"name\":\"Notebook Dell Inspiron\",\"price\":2999.90,\"stock\":10,\"category\":\"ELETRONICOS\"},{\"id\":\"PROD-002\",\"name\":\"iPhone 15 Pro\",\"price\":7999.90,\"stock\":5,\"category\":\"SMARTPHONES\"},{\"id\":\"PROD-003\",\"name\":\"Smart TV Samsung 55\",\"price\":3499.90,\"stock\":8,\"category\":\"ELETRONICOS\"}]}"
+        },
+        {
+          "name": "2 - Catalogo Falha_401",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"error\":\"Unauthorized\",\"message\":\"Token invalido ou expirado\",\"code\":\"AUTH_TOKEN_INVALID\"}"
+        }
+      ]
+    },
+    {
+      "name": "3 - Validar Endereco",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var cep = pm.environment.get('cep');",
+              "var enderecoStatus = pm.environment.get('enderecoStatus');",
+              "",
+              "var cepRegex = /^\\d{5}-\\d{3}$/;",
+              "if (!cepRegex.test(cep)) {",
+              "    console.log('[AVISO] CEP invalido: ' + cep);",
+              "    pm.environment.set('mockStatus', '422');",
+              "    console.log('mockStatus definido para 422 (CEP invalido)');",
+              "} else if (cep === '99999-999' || enderecoStatus === 'falha') {",
+              "    pm.environment.set('mockStatus', '422');",
+              "    console.log('mockStatus definido para 422 (regiao indisponivel)');",
+              "} else {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    console.log('mockStatus definido para 200 (endereco valido)');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var status = pm.response.code;",
+              "var responseBody;",
+              "try { responseBody = pm.response.json(); } catch(e) { responseBody = {}; }",
+              "",
+              "if (status === 200) {",
+              "    pm.test('Status 200 - Endereco Valido', function() {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "    pm.test('Endereco completo retornado', function() {",
+              "        pm.expect(responseBody).to.have.property('cep');",
+              "        pm.expect(responseBody).to.have.property('endereco');",
+              "        pm.expect(responseBody).to.have.property('cidade');",
+              "        pm.expect(responseBody).to.have.property('estado');",
+              "    });",
+              "    pm.environment.set('endereco', responseBody.endereco);",
+              "    pm.environment.set('cidade', responseBody.cidade);",
+              "    pm.environment.set('estado', responseBody.estado);",
+              "    console.log('Endereco salvo: ' + responseBody.endereco + ', ' + responseBody.cidade + ' - ' + responseBody.estado);",
+              "} else if (status === 422) {",
+              "    pm.test('Status 422 - Regiao Indisponivel', function() {",
+              "        pm.response.to.have.status(422);",
+              "    });",
+              "    pm.test('Codigo de erro REGION_UNAVAILABLE', function() {",
+              "        pm.expect(responseBody.code).to.eql('REGION_UNAVAILABLE');",
+              "    });",
+              "    console.log('Endereco falhou: ' + responseBody.message);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-mock-response-code",
+            "value": "{{mockStatus}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"cep\": \"{{cep}}\",\n    \"cidade\": \"{{cidade}}\",\n    \"estado\": \"{{estado}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/checkout/address",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "checkout",
+            "address"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "3 - Endereco Valido_200",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"cep\": \"{{cep}}\",\n    \"cidade\": \"{{cidade}}\",\n    \"estado\": \"{{estado}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checkout/address",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "checkout",
+                "address"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"cep\":\"01310-100\",\"endereco\":\"Av. Paulista, 1000\",\"cidade\":\"Sao Paulo\",\"estado\":\"SP\",\"disponivel\":true,\"prazoEntrega\":\"3-5 dias uteis\",\"frete\":19.90}"
+        },
+        {
+          "name": "3 - Regiao Indisponivel_422",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"cep\": \"{{cep}}\",\n    \"cidade\": \"{{cidade}}\",\n    \"estado\": \"{{estado}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checkout/address",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "checkout",
+                "address"
+              ]
+            }
+          },
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"error\":\"Unprocessable Entity\",\"message\":\"Regiao indisponivel para entrega\",\"code\":\"REGION_UNAVAILABLE\",\"details\":\"Nao realizamos entregas neste CEP\"}"
+        }
+      ]
+    },
+    {
+      "name": "4 - Criacao de Pedido",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var produtoId = pm.environment.get('produtoId');",
+              "var pedidoStatus = pm.environment.get('pedidoStatus');",
+              "",
+              "var prodIdRegex = /^PROD-\\d{3}$/;",
+              "if (!produtoId || !prodIdRegex.test(produtoId)) {",
+              "    console.log('[AVISO] ProdutoId invalido: ' + produtoId);",
+              "    pm.environment.set('mockStatus', '400');",
+              "    console.log('mockStatus definido para 400 (carrinho vazio)');",
+              "} else if (pedidoStatus === 'falha') {",
+              "    pm.environment.set('mockStatus', '400');",
+              "    console.log('mockStatus definido para 400 (falha de pedido)');",
+              "} else {",
+              "    pm.environment.set('mockStatus', '201');",
+              "    console.log('mockStatus definido para 201 (pedido criado)');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var status = pm.response.code;",
+              "var responseBody;",
+              "try { responseBody = pm.response.json(); } catch(e) { responseBody = {}; }",
+              "",
+              "if (status === 201) {",
+              "    pm.test('Status 201 - Pedido Criado', function() {",
+              "        pm.response.to.have.status(201);",
+              "    });",
+              "    pm.test('OrderId no formato ORD-YYYYMMDD-NNNN', function() {",
+              "        var orderIdRegex = /^ORD-\\d{8}-\\d{4}$/;",
+              "        pm.expect(responseBody.orderId).to.match(orderIdRegex);",
+              "    });",
+              "    pm.test('Status do pedido CREATED', function() {",
+              "        pm.expect(responseBody.status).to.eql('CREATED');",
+              "    });",
+              "    pm.environment.set('orderId', responseBody.orderId);",
+              "    console.log('OrderId salvo: ' + responseBody.orderId);",
+              "} else if (status === 400) {",
+              "    pm.test('Status 400 - Carrinho Vazio', function() {",
+              "        pm.response.to.have.status(400);",
+              "    });",
+              "    pm.test('Codigo de erro CART_EMPTY', function() {",
+              "        pm.expect(responseBody.code).to.eql('CART_EMPTY');",
+              "    });",
+              "    console.log('Pedido falhou: ' + responseBody.message);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-mock-response-code",
+            "value": "{{mockStatus}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"produtoId\": \"{{produtoId}}\",\n    \"produtoNome\": \"{{produtoNome}}\",\n    \"preco\": \"{{produtoPreco}}\",\n    \"quantidade\": \"{{quantidade}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/orders",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "orders"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "4 - Pedido Criado_201",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"produtoId\": \"{{produtoId}}\",\n    \"produtoNome\": \"{{produtoNome}}\",\n    \"preco\": \"{{produtoPreco}}\",\n    \"quantidade\": \"{{quantidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"orderId\":\"ORD-20260225-0001\",\"produtoId\":\"PROD-001\",\"produtoNome\":\"Notebook Dell Inspiron\",\"quantidade\":1,\"total\":2999.90,\"status\":\"CREATED\",\"createdAt\":\"2026-02-25T10:00:00Z\"}"
+        },
+        {
+          "name": "4 - Carrinho Vazio_400",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"produtoId\": \"{{produtoId}}\",\n    \"produtoNome\": \"{{produtoNome}}\",\n    \"preco\": \"{{produtoPreco}}\",\n    \"quantidade\": \"{{quantidade}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"error\":\"Bad Request\",\"message\":\"Carrinho vazio. Adicione produtos antes de finalizar\",\"code\":\"CART_EMPTY\"}"
+        }
+      ]
+    },
+    {
+      "name": "5 - Pagamento PIX",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var orderId = pm.environment.get('orderId');",
+              "var pagamentoStatus = pm.environment.get('pagamentoStatus');",
+              "",
+              "var orderIdRegex = /^ORD-\\d{8}-\\d{4}$/;",
+              "if (!orderId || !orderIdRegex.test(orderId)) {",
+              "    console.log('[AVISO] OrderId invalido: ' + orderId);",
+              "    pm.environment.set('mockStatus', '400');",
+              "    console.log('mockStatus definido para 400 (orderId invalido)');",
+              "} else if (pagamentoStatus === 'falha') {",
+              "    pm.environment.set('mockStatus', '400');",
+              "    console.log('mockStatus definido para 400 (falha de pagamento PIX)');",
+              "} else {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    console.log('mockStatus definido para 200 (PIX sucesso)');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var status = pm.response.code;",
+              "var responseBody;",
+              "try { responseBody = pm.response.json(); } catch(e) { responseBody = {}; }",
+              "",
+              "if (status === 200) {",
+              "    pm.test('Status 200 - PIX Sucesso', function() {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "    pm.test('PaymentId no formato PAY-YYYYMMDD-NNNN', function() {",
+              "        var payIdRegex = /^PAY-\\d{8}-\\d{4}$/;",
+              "        pm.expect(responseBody.paymentId).to.match(payIdRegex);",
+              "    });",
+              "    pm.test('PixCode presente e nao vazio', function() {",
+              "        pm.expect(responseBody).to.have.property('pixCode');",
+              "        pm.expect(responseBody.pixCode).to.be.a('string').and.not.empty;",
+              "    });",
+              "    pm.test('Status PAID', function() {",
+              "        pm.expect(responseBody.status).to.eql('PAID');",
+              "    });",
+              "    pm.environment.set('paymentId', responseBody.paymentId);",
+              "    pm.environment.set('pixCode', responseBody.pixCode);",
+              "    console.log('PaymentId salvo: ' + responseBody.paymentId);",
+              "} else if (status === 400) {",
+              "    pm.test('Status 400 - Erro PIX', function() {",
+              "        pm.response.to.have.status(400);",
+              "    });",
+              "    pm.test('Codigo de erro PIX_GENERATION_FAILED', function() {",
+              "        pm.expect(responseBody.code).to.eql('PIX_GENERATION_FAILED');",
+              "    });",
+              "    console.log('PIX falhou: ' + responseBody.message);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-mock-response-code",
+            "value": "{{mockStatus}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"pix\",\n    \"amount\": 2999.90\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/payment/pix",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "payment",
+            "pix"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "5 - PIX Sucesso_200",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"pix\",\n    \"amount\": 2999.90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/pix",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payment",
+                "pix"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"paymentId\":\"PAY-20260225-0001\",\"orderId\":\"ORD-20260225-0001\",\"paymentMethod\":\"pix\",\"status\":\"PAID\",\"pixCode\":\"00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-42661417400052040000530398654040.015802BR5913ECOMMERCE SA6009SAO PAULO62070503***63041D3D\",\"amount\":2999.90,\"paidAt\":\"2026-02-25T10:30:00Z\"}"
+        },
+        {
+          "name": "5 - Erro PIX_400",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"pix\",\n    \"amount\": 2999.90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/pix",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payment",
+                "pix"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"error\":\"Bad Request\",\"message\":\"Erro ao gerar codigo PIX. Tente novamente\",\"code\":\"PIX_GENERATION_FAILED\"}"
+        }
+      ]
+    },
+    {
+      "name": "6 - Pagamento Cartao",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var cardNumber = pm.environment.get('cardNumber');",
+              "var expiryDate = pm.environment.get('expiryDate');",
+              "var cvv = pm.environment.get('cvv');",
+              "var parcelas = parseInt(pm.environment.get('parcelas')) || 1;",
+              "",
+              "var cardRegex = /^\\d{16}$/;",
+              "if (!cardRegex.test(cardNumber)) {",
+              "    console.log('[AVISO] Numero de cartao invalido');",
+              "}",
+              "",
+              "var expiryRegex = /^\\d{2}\\/\\d{2}$/;",
+              "if (!expiryRegex.test(expiryDate)) {",
+              "    console.log('[AVISO] Data de validade invalida');",
+              "}",
+              "",
+              "var cvvRegex = /^\\d{3,4}$/;",
+              "if (!cvvRegex.test(cvv)) {",
+              "    console.log('[AVISO] CVV invalido');",
+              "}",
+              "",
+              "if (cardNumber && cardNumber.endsWith('0000')) {",
+              "    pm.environment.set('mockStatus', '402');",
+              "    pm.environment.set('cenario', 'SEM_SALDO');",
+              "    console.log('mockStatus definido para 402 (sem saldo)');",
+              "} else if (parcelas > 1) {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    pm.environment.set('cenario', 'CARTAO_PARCELADO_SUCESSO');",
+              "    console.log('mockStatus definido para 200 (cartao parcelado)');",
+              "} else {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    pm.environment.set('cenario', 'CARTAO_AVISTA_SUCESSO');",
+              "    console.log('mockStatus definido para 200 (cartao a vista)');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var status = pm.response.code;",
+              "var responseBody;",
+              "try { responseBody = pm.response.json(); } catch(e) { responseBody = {}; }",
+              "var cenario = pm.environment.get('cenario');",
+              "",
+              "if (status === 200) {",
+              "    pm.test('Status 200 - Pagamento Aprovado', function() {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "    pm.test('PaymentId no formato PAY-YYYYMMDD-NNNN', function() {",
+              "        var payIdRegex = /^PAY-\\d{8}-\\d{4}$/;",
+              "        pm.expect(responseBody.paymentId).to.match(payIdRegex);",
+              "    });",
+              "    pm.test('Bandeira do cartao valida', function() {",
+              "        var brandRegex = /^(VISA|MASTERCARD|ELO|AMEX)$/;",
+              "        pm.expect(responseBody.cardBrand).to.match(brandRegex);",
+              "    });",
+              "    pm.test('Status APPROVED', function() {",
+              "        pm.expect(responseBody.status).to.eql('APPROVED');",
+              "    });",
+              "    if (cenario === 'CARTAO_PARCELADO_SUCESSO') {",
+              "        pm.test('Parcelas maior que 1 (parcelado)', function() {",
+              "            pm.expect(responseBody.installments).to.be.above(1);",
+              "        });",
+              "    } else {",
+              "        pm.test('Parcelas igual a 1 (a vista)', function() {",
+              "            pm.expect(responseBody.installments).to.eql(1);",
+              "        });",
+              "    }",
+              "    pm.environment.set('paymentId', responseBody.paymentId);",
+              "    console.log('PaymentId salvo: ' + responseBody.paymentId);",
+              "} else if (status === 402) {",
+              "    pm.test('Status 402 - Sem Saldo', function() {",
+              "        pm.response.to.have.status(402);",
+              "    });",
+              "    pm.test('Codigo de erro INSUFFICIENT_FUNDS', function() {",
+              "        pm.expect(responseBody.code).to.eql('INSUFFICIENT_FUNDS');",
+              "    });",
+              "    console.log('Cartao falhou: ' + responseBody.message);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-mock-response-code",
+            "value": "{{mockStatus}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"credit_card\",\n    \"cardNumber\": \"{{cardNumber}}\",\n    \"cardHolder\": \"{{cardHolder}}\",\n    \"expiryDate\": \"{{expiryDate}}\",\n    \"cvv\": \"{{cvv}}\",\n    \"installments\": \"{{parcelas}}\",\n    \"amount\": 2999.90\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/payment/card",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "payment",
+            "card"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "6 - Cartao a Vista Sucesso_200",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"credit_card\",\n    \"cardNumber\": \"{{cardNumber}}\",\n    \"cardHolder\": \"{{cardHolder}}\",\n    \"expiryDate\": \"{{expiryDate}}\",\n    \"cvv\": \"{{cvv}}\",\n    \"installments\": \"{{parcelas}}\",\n    \"amount\": 2999.90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payment",
+                "card"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"paymentId\":\"PAY-20260225-0002\",\"orderId\":\"ORD-20260225-0001\",\"paymentMethod\":\"credit_card\",\"status\":\"APPROVED\",\"cardBrand\":\"VISA\",\"cardLastDigits\":\"1111\",\"installments\":1,\"amount\":2999.90,\"paidAt\":\"2026-02-25T10:30:00Z\"}"
+        },
+        {
+          "name": "6 - Cartao Parcelado Sucesso_200",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"credit_card\",\n    \"cardNumber\": \"{{cardNumber}}\",\n    \"cardHolder\": \"{{cardHolder}}\",\n    \"expiryDate\": \"{{expiryDate}}\",\n    \"cvv\": \"{{cvv}}\",\n    \"installments\": \"{{parcelas}}\",\n    \"amount\": 2999.90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payment",
+                "card"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"paymentId\":\"PAY-20260225-0003\",\"orderId\":\"ORD-20260225-0001\",\"paymentMethod\":\"credit_card\",\"status\":\"APPROVED\",\"cardBrand\":\"MASTERCARD\",\"cardLastDigits\":\"4444\",\"installments\":3,\"installmentAmount\":999.97,\"amount\":2999.90,\"paidAt\":\"2026-02-25T10:30:00Z\"}"
+        },
+        {
+          "name": "6 - Cartao Sem Saldo_402",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"credit_card\",\n    \"cardNumber\": \"{{cardNumber}}\",\n    \"cardHolder\": \"{{cardHolder}}\",\n    \"expiryDate\": \"{{expiryDate}}\",\n    \"cvv\": \"{{cvv}}\",\n    \"installments\": \"{{parcelas}}\",\n    \"amount\": 2999.90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payment",
+                "card"
+              ]
+            }
+          },
+          "status": "Payment Required",
+          "code": 402,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"error\":\"Payment Required\",\"message\":\"Saldo insuficiente\",\"code\":\"INSUFFICIENT_FUNDS\",\"cardLastDigits\":\"0000\"}"
+        }
+      ]
+    },
+    {
+      "name": "7 - Pagamento Boleto",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var orderId = pm.environment.get('orderId');",
+              "var dueDate = pm.environment.get('dueDate');",
+              "",
+              "var orderIdRegex = /^ORD-\\d{8}-\\d{4}$/;",
+              "if (!orderId || !orderIdRegex.test(orderId)) {",
+              "    console.log('[AVISO] OrderId invalido: ' + orderId);",
+              "}",
+              "",
+              "var today = new Date();",
+              "today.setHours(0, 0, 0, 0);",
+              "var dueDateObj = new Date(dueDate + 'T00:00:00');",
+              "if (dueDateObj < today) {",
+              "    pm.environment.set('mockStatus', '410');",
+              "    console.log('mockStatus definido para 410 (boleto vencido). DueDate: ' + dueDate);",
+              "} else {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    console.log('mockStatus definido para 200 (boleto sucesso). DueDate: ' + dueDate);",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var status = pm.response.code;",
+              "var responseBody;",
+              "try { responseBody = pm.response.json(); } catch(e) { responseBody = {}; }",
+              "",
+              "if (status === 200) {",
+              "    pm.test('Status 200 - Boleto Gerado', function() {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "    pm.test('PaymentId no formato PAY-YYYYMMDD-NNNN', function() {",
+              "        var payIdRegex = /^PAY-\\d{8}-\\d{4}$/;",
+              "        pm.expect(responseBody.paymentId).to.match(payIdRegex);",
+              "    });",
+              "    pm.test('BoletoCode no formato correto', function() {",
+              "        var boletoRegex = /^\\d{5}\\.\\d{5} \\d{5}\\.\\d{6} \\d{5}\\.\\d{6} \\d \\d{14}$/;",
+              "        pm.expect(responseBody.boletoCode).to.match(boletoRegex);",
+              "    });",
+              "    pm.test('Status PENDING', function() {",
+              "        pm.expect(responseBody.status).to.eql('PENDING');",
+              "    });",
+              "    pm.environment.set('paymentId', responseBody.paymentId);",
+              "    pm.environment.set('boletoCode', responseBody.boletoCode);",
+              "    console.log('PaymentId salvo: ' + responseBody.paymentId);",
+              "    console.log('BoletoCode salvo: ' + responseBody.boletoCode);",
+              "} else if (status === 410) {",
+              "    pm.test('Status 410 - Boleto Vencido', function() {",
+              "        pm.response.to.have.status(410);",
+              "    });",
+              "    pm.test('Codigo de erro BOLETO_EXPIRED', function() {",
+              "        pm.expect(responseBody.code).to.eql('BOLETO_EXPIRED');",
+              "    });",
+              "    console.log('Boleto falhou: ' + responseBody.message);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-mock-response-code",
+            "value": "{{mockStatus}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"boleto\",\n    \"dueDate\": \"{{dueDate}}\",\n    \"amount\": 2999.90\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/payment/boleto",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "payment",
+            "boleto"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "7 - Boleto Sucesso_200",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"boleto\",\n    \"dueDate\": \"{{dueDate}}\",\n    \"amount\": 2999.90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/boleto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payment",
+                "boleto"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"paymentId\":\"PAY-20260225-0004\",\"orderId\":\"ORD-20260225-0001\",\"paymentMethod\":\"boleto\",\"status\":\"PENDING\",\"boletoCode\":\"34191.79001 01043.510047 91020.150008 1 96610000299990\",\"dueDate\":\"2026-03-10\",\"amount\":2999.90,\"generatedAt\":\"2026-02-25T10:30:00Z\"}"
+        },
+        {
+          "name": "7 - Boleto Vencido_410",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"paymentMethod\": \"boleto\",\n    \"dueDate\": \"{{dueDate}}\",\n    \"amount\": 2999.90\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payment/boleto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payment",
+                "boleto"
+              ]
+            }
+          },
+          "status": "Gone",
+          "code": 410,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"error\":\"Gone\",\"message\":\"Boleto vencido. Gere um novo boleto\",\"code\":\"BOLETO_EXPIRED\",\"dueDate\":\"2026-01-01\"}"
+        }
+      ]
+    },
+    {
+      "name": "8 - Rastreio do Pedido",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var orderId = pm.environment.get('orderId');",
+              "var paymentId = pm.environment.get('paymentId');",
+              "var deliveryStatus = pm.environment.get('deliveryStatus');",
+              "",
+              "var orderIdRegex = /^ORD-\\d{8}-\\d{4}$/;",
+              "var payIdRegex = /^PAY-\\d{8}-\\d{4}$/;",
+              "",
+              "if (!orderId || !orderIdRegex.test(orderId) || !paymentId || !payIdRegex.test(paymentId)) {",
+              "    pm.environment.set('mockStatus', '404');",
+              "    console.log('mockStatus definido para 404 (IDs invalidos)');",
+              "} else if (deliveryStatus === 'entregue') {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    pm.environment.set('cenario', 'ENTREGUE');",
+              "    console.log('mockStatus definido para 200 (ENTREGUE)');",
+              "} else {",
+              "    pm.environment.set('mockStatus', '200');",
+              "    pm.environment.set('cenario', 'EM_TRANSPORTE');",
+              "    console.log('mockStatus definido para 200 (EM_TRANSPORTE)');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var status = pm.response.code;",
+              "var responseBody;",
+              "try { responseBody = pm.response.json(); } catch(e) { responseBody = {}; }",
+              "var cenario = pm.environment.get('cenario');",
+              "",
+              "if (status === 200) {",
+              "    pm.test('Status 200 - Rastreio OK', function() {",
+              "        pm.response.to.have.status(200);",
+              "    });",
+              "    pm.test('TrackingCode no formato correto', function() {",
+              "        var trackingRegex = /^[A-Z]{2}\\d{9}[A-Z]{2}$/;",
+              "        pm.expect(responseBody.trackingCode).to.match(trackingRegex);",
+              "    });",
+              "    if (cenario === 'ENTREGUE') {",
+              "        pm.test('Status ENTREGUE', function() {",
+              "            pm.expect(responseBody.status).to.eql('ENTREGUE');",
+              "        });",
+              "        pm.test('Data de entrega presente e no formato YYYY-MM-DD', function() {",
+              "            pm.expect(responseBody).to.have.property('deliveredAt');",
+              "            var dateRegex = /^\\d{4}-\\d{2}-\\d{2}$/;",
+              "            pm.expect(responseBody.deliveredAt).to.match(dateRegex);",
+              "        });",
+              "    } else {",
+              "        pm.test('Status EM_TRANSPORTE', function() {",
+              "            pm.expect(responseBody.status).to.eql('EM_TRANSPORTE');",
+              "        });",
+              "        pm.test('Data estimada de entrega no formato YYYY-MM-DD', function() {",
+              "            pm.expect(responseBody).to.have.property('estimatedDelivery');",
+              "            var dateRegex = /^\\d{4}-\\d{2}-\\d{2}$/;",
+              "            pm.expect(responseBody.estimatedDelivery).to.match(dateRegex);",
+              "        });",
+              "    }",
+              "    pm.environment.set('trackingCode', responseBody.trackingCode);",
+              "    console.log('TrackingCode salvo: ' + responseBody.trackingCode);",
+              "} else if (status === 404) {",
+              "    pm.test('Status 404 - Pedido Nao Encontrado', function() {",
+              "        pm.response.to.have.status(404);",
+              "    });",
+              "    pm.test('Codigo de erro ORDER_NOT_FOUND', function() {",
+              "        pm.expect(responseBody.code).to.eql('ORDER_NOT_FOUND');",
+              "    });",
+              "    console.log('Rastreio falhou: ' + responseBody.message);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "x-mock-response-code",
+            "value": "{{mockStatus}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/orders/tracking?orderId={{orderId}}&paymentId={{paymentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "orders",
+            "tracking"
+          ],
+          "query": [
+            {
+              "key": "orderId",
+              "value": "{{orderId}}"
+            },
+            {
+              "key": "paymentId",
+              "value": "{{paymentId}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "8 - Em Transporte_200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/tracking?orderId={{orderId}}&paymentId={{paymentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "tracking"
+              ],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                },
+                {
+                  "key": "paymentId",
+                  "value": "{{paymentId}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"orderId\":\"ORD-20260225-0001\",\"paymentId\":\"PAY-20260225-0001\",\"status\":\"EM_TRANSPORTE\",\"trackingCode\":\"BR123456789BR\",\"estimatedDelivery\":\"2026-02-28\",\"message\":\"Seu pedido esta a caminho!\"}"
+        },
+        {
+          "name": "8 - Entregue_200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/tracking?orderId={{orderId}}&paymentId={{paymentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "tracking"
+              ],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                },
+                {
+                  "key": "paymentId",
+                  "value": "{{paymentId}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"orderId\":\"ORD-20260225-0001\",\"paymentId\":\"PAY-20260225-0001\",\"status\":\"ENTREGUE\",\"trackingCode\":\"BR123456789BR\",\"deliveredAt\":\"2026-02-26\",\"recipient\":\"Marcelo Rosa\",\"message\":\"Pedido entregue com sucesso!\"}"
+        },
+        {
+          "name": "8 - Pedido Nao Encontrado_404",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "x-mock-response-code",
+                "value": "{{mockStatus}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/tracking?orderId={{orderId}}&paymentId={{paymentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "tracking"
+              ],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                },
+                {
+                  "key": "paymentId",
+                  "value": "{{paymentId}}"
+                }
+              ]
+            }
+          },
+          "status": "Not Found",
+          "code": 404,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\"error\":\"Not Found\",\"message\":\"Pedido nao encontrado\",\"code\":\"ORDER_NOT_FOUND\"}"
+        }
+      ]
+    }
+  ]
+}
