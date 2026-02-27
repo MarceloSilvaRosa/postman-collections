@@ -1,8 +1,8 @@
-# E-commerce v2 - Fluxo Completo com 12 Cenarios
+# E-commerce v2 - Projeto de Virtualizacao de APIs
 
-Projeto de virtualizacao de APIs utilizando Postman Mock Server com **fluxo completo encadeado**.
+Projeto de virtualizacao de APIs utilizando Postman Mock Server com **fluxo completo encadeado de 6 steps**.
 
-A variavel `fluxo` no Environment controla qual cenario sera executado. Cada fluxo percorre todos os 6 mocks em sequencia, e se um step falhar, os proximos sao bloqueados automaticamente com `pm.execution.setNextRequest(null)`.
+A variavel `email` no Environment controla qual cenario sera executado. O Pre-request Script da Collection faz o mapeamento automatico: cada email corresponde a um conjunto de variaveis de controle que direcionam os mocks para o cenario desejado.
 
 ---
 
@@ -29,10 +29,10 @@ A variavel `fluxo` no Environment controla qual cenario sera executado. Cada flu
 
 ---
 
-## Os 12 Fluxos
+## Os 12 Cenarios
 
-| Fluxo | Nome | Mock 1 | Mock 2 | Mock 3 | Mock 4 | Mock 5 | Mock 6 | Para em |
-|-------|------|--------|--------|--------|--------|--------|--------|---------|
+| Cenario | Nome | Mock 1 | Mock 2 | Mock 3 | Mock 4 | Mock 5 | Mock 6 | Para em |
+|---------|------|--------|--------|--------|--------|--------|--------|---------|
 | 1 | Login sem credenciais | 401 | - | - | - | - | - | Mock 1 |
 | 2 | Token invalido no catalogo | 200 | 401 | - | - | - | - | Mock 2 |
 | 3 | Regiao indisponivel | 200 | 200 | 422 | - | - | - | Mock 3 |
@@ -48,34 +48,37 @@ A variavel `fluxo` no Environment controla qual cenario sera executado. Cada flu
 
 ---
 
-## Como Trocar o Fluxo
+## Como Trocar o Cenario
 
-Basta alterar a variavel `fluxo` no Environment antes de executar:
+Basta alterar a variavel `email` no Environment antes de executar:
 
 1. Abra o **E-commerce v2 Environment**
-2. Edite a variavel `fluxo`
-3. Digite o numero do fluxo desejado (1 a 12)
+2. Edite a variavel `email`
+3. Digite o email correspondente ao cenario desejado (tabela abaixo)
 4. **Save**
 5. Execute o Runner
 
+O Pre-request Script da Collection faz o mapeamento automatico de todas as variaveis de controle com base no email informado.
+
 ---
 
-## Massa de Dados por Fluxo
+## Mapeamento de Email por Cenario
 
-| Fluxo | email | password | cep | quantidade | paymentMethod | cardNumber | parcelas | dueDate | deliveryStatus |
-|-------|-------|----------|-----|------------|---------------|------------|---------|---------|----------------|
-| 1 | (vazio) | (vazio) | 01310-100 | 1 | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
-| 2 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
-| 3 | cliente@ecommerce.com | Senha@2026 | 99999-999 | 1 | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
-| 4 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 0 | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
-| 5 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | pix_error | 4111111111111111 | 1 | 2026-03-10 | transporte |
-| 6 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | credit_card | 0000000000000000 | 1 | 2026-03-10 | transporte |
-| 7 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | boleto | 4111111111111111 | 1 | 2020-01-01 | transporte |
-| 8 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
-| 9 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | pix | 4111111111111111 | 1 | 2026-03-10 | entregue |
-| 10 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | credit_card | 4111111111111111 | 1 | 2026-03-10 | transporte |
-| 11 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | credit_card | 5555555555554444 | 3 | 2026-03-10 | entregue |
-| 12 | cliente@ecommerce.com | Senha@2026 | 01310-100 | 1 | boleto | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| Email | Cenario | paymentMethod | cardNumber | parcelas | dueDate | deliveryStatus |
+|-------|---------|---------------|------------|----------|---------|----------------|
+| falha@ecommerce.com | 1 - Login sem credenciais | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| token.invalido@ecommerce.com | 2 - Token invalido no catalogo | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| cep.invalido@ecommerce.com | 3 - Regiao indisponivel | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| carrinho.vazio@ecommerce.com | 4 - Carrinho vazio | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| pix.erro@ecommerce.com | 5 - Erro no PIX | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| sem.saldo@ecommerce.com | 6 - Cartao sem saldo | credit_card | 0000000000000000 | 1 | 2026-03-10 | transporte |
+| boleto.vencido@ecommerce.com | 7 - Boleto vencido | boleto | 4111111111111111 | 1 | 2020-01-01 | transporte |
+| pix.transporte@ecommerce.com | 8 - PIX OK - Em transporte | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| pix.entregue@ecommerce.com | 9 - PIX OK - Entregue | pix | 4111111111111111 | 1 | 2026-03-10 | entregue |
+| cartao.avista@ecommerce.com | 10 - Cartao avista OK | credit_card | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| cartao.parcelado@ecommerce.com | 11 - Cartao parcelado OK | credit_card | 4111111111111111 | 3 | 2026-03-10 | entregue |
+| boleto.ok@ecommerce.com | 12 - Boleto OK - Em transporte | boleto | 4111111111111111 | 1 | 2026-03-10 | transporte |
+| cliente@ecommerce.com | Default - PIX OK - Em transporte | pix | 4111111111111111 | 1 | 2026-03-10 | transporte |
 
 ---
 
@@ -83,112 +86,81 @@ Basta alterar a variavel `fluxo` no Environment antes de executar:
 
 | Variavel | Gerada em | Usada em |
 |----------|-----------|----------|
-| token | Mock 1 | Mock 2, 3, 4, 5, 6 |
-| userId | Mock 1 | - |
-| produtoId | Mock 2 | Mock 4 |
-| produtoNome | Mock 2 | Mock 4 |
-| produtoPreco | Mock 2 | Mock 4 |
-| endereco | Mock 3 | - |
-| cidade | Mock 3 | - |
-| estado | Mock 3 | - |
-| orderId | Mock 4 | Mock 5, 6 |
-| orderStatus | Mock 4 | - |
-| paymentId | Mock 5 | Mock 6 |
-| pixCode | Mock 5 | - |
-| boletoCode | Mock 5 | - |
-| trackingCode | Mock 6 | - |
+| token | Mock 1 - Login | Mocks 2, 3, 4, 5, 6 |
+| userId | Mock 1 - Login | Mock 4 |
+| produtoId | Mock 2 - Catalogo | Mock 4 |
+| produtoNome | Mock 2 - Catalogo | Mock 4 |
+| produtoPreco | Mock 2 - Catalogo | Mock 4 |
+| endereco | Mock 3 - Endereco | Mock 4 |
+| cidade | Mock 3 - Endereco | Mock 4 |
+| estado | Mock 3 - Endereco | Mock 4 |
+| orderId | Mock 4 - Pedido | Mocks 5, 6 |
+| paymentId | Mock 5 - Pagamento | Mock 6 |
+| pixCode | Mock 5 - Pagamento | - |
+| boletoCode | Mock 5 - Pagamento | - |
+| trackingCode | Mock 6 - Rastreio | - |
 
 ---
 
-## Regex Utilizadas
+## Validacoes com Regex
 
-| Campo | Regex | Valido | Invalido |
-|-------|-------|--------|---------|
-| Email | `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+
-[\.[a-zA-Z]{2,}$` | cliente@ecommerce.com | emailinvalido |
-| Senha | `^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@#$%^&+=!]).{6,}$` | Senha@2026 | 123 |
-| Token JWT | `^eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+$` | eyJhbG...abc.def | token_invalido |
-| CEP | `^\d{5}-\d{3}$` | 01310-100 | 01310100 |
-| Produto ID | `^PROD-\d{3}$` | PROD-001 | PRODUTO-INVALIDO |
-| Order ID | `^ORD-\d{8}-\d{4}$` | ORD-20260225-0001 | ORDER-INVALIDO |
-| Payment ID | `^PAY-\d{8}-\d{4}$` | PAY-20260226-0001 | PAY-123 |
-| Cartao | `^\d{16}$` | 4111111111111111 | 4111 |
-| Validade | `^(0[1-9]|1[0-2])\/\d{2}$` | 12/28 | 13/28 |
-| CVV | `^\d{3,4}$` | 123 | 12 |
-| Boleto | `^\d{5}\.\d{5} \d{5}\.\d{6} \d{5}\.\d{6} \d \d{14}$` | 34191.79001 01043.510047... | invalido |
-| Tracking | `^[A-Z]{2}\d{9}[A-Z]{2}$` | BR123456789BR | BR-123 |
-| Data | `^\d{4}-\d{2}-\d{2}$` | 2026-02-26 | 26/02/2026 |
-| Bandeira | `^(VISA|MASTERCARD|ELO|AMEX)$` | VISA | visa |
+| Campo | Regex | Descricao |
+|-------|-------|-----------|
+| email | `^[^\s@]+@[^\s@]+\.[^\s@]+$` | Formato valido de email |
+| password | `^(?=.*[A-Z])(?=.*\d)(?=.*[@#$%&*!])[A-Za-z\d@#$%&*!]{8,}$` | Min 8 chars, 1 maiuscula, 1 numero, 1 especial |
+| token JWT | `^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$` | Formato JWT (3 partes separadas por ponto) |
+| CEP | `^\d{5}-\d{3}$` | Formato 00000-000 |
+| produtoId | `^PROD-\d{3}$` | Formato PROD-000 |
+| orderId | `^ORD-\d{8}-\d{3}$` | Formato ORD-00000000-000 |
+| paymentId | `^PAY-\d{8}-\d{3}$` | Formato PAY-00000000-000 |
+| trackingCode | `^TRK-[A-Z0-9]{10}$` | Formato TRK-XXXXXXXXXX |
+
+---
+
+## Configuracao do Mock Server
+
+1. Importe a Collection `E-commerce-v2.postman_collection.json` no Postman
+2. Importe o Environment `E-commerce-v2.postman_environment.json`
+3. Selecione o Environment **E-commerce v2**
+4. Acesse **Mock Servers** → **Create Mock Server**
+5. Selecione a collection **E-commerce v2 - Cenarios de Pagamento**
+6. Copie a URL gerada do Mock Server
+7. Cole a URL na variavel `baseUrl` do Environment
+8. **Save**
 
 ---
 
 ## Como Executar
 
-### 1. Criar Mock Server no Postman
-1. Clique com botao direito na collection **E-commerce v2**
-2. **Mock Collection**
-3. Nome: `E-commerce v2 Mock Server`
-4. **Create Mock Server**
-5. Copie a URL gerada (ex: `https://xyz.mock.pstmn.io`)
+### Passo a passo
 
-### 2. Importar no Postman
-1. Importe primeiro: `E-commerce-v2.postman_environment.json`
-2. Depois importe: `E-commerce-v2.postman_collection.json`
+1. Configure o Mock Server (veja secao acima)
+2. Selecione o Environment **E-commerce v2**
+3. Altere o `email` para o cenario desejado (veja tabela de mapeamento)
+4. Abra o **Collection Runner**
+5. Selecione a collection **E-commerce v2 - Cenarios de Pagamento**
+6. Certifique-se que todas as 8 requests estao selecionadas
+7. Clique em **Run**
 
-### 3. Configurar o Environment
-1. Abra o **E-commerce v2 Environment**
-2. Preencha `baseUrl` com a URL do Mock Server
-3. Configure o `fluxo` com o numero desejado (1 a 12)
-4. **Save**
+### Observacoes
 
-### 4. Executar
-1. Clique com botao direito na collection
-2. **Run collection**
-3. Selecione o **E-commerce v2 Environment**
-4. **Run E-commerce v2**
-
-### 5. Trocar o Cenario
-1. Edite a variavel `fluxo` no Environment
-2. Consulte a tabela **Massa de Dados por Fluxo**
-3. Execute novamente
+- O Pre-request Script da Collection configura automaticamente todas as variaveis com base no email
+- Nao e necessario alterar ninguna outra variavel manualmente
+- Os tests validam tanto cenarios de sucesso quanto de falha
+- O fluxo para automaticamente quando um step retorna erro (status != 2xx)
 
 ---
 
 ## Estrutura da Collection
 
 ```
-E-commerce v2 - Fluxo Completo (12 Cenarios)
-|
-|-- Collection Pre-request Script (configura massa por fluxo)
-|
-|-- 1 - Login
-|   |-- Pre-request: valida email/senha (Regex), seta mockStatus
-|   |-- Tests: valida JWT, salva token
-|   |-- Examples: Sucesso_200, Falha_401
-|
-|-- 2 - Catalogo de Produtos
-|   |-- Pre-request: valida token (Regex), seta mockStatus
-|   |-- Tests: valida produtos, salva produtoId
-|   |-- Examples: Sucesso_200, Falha_401
-|
-|-- 3 - Validar Endereco
-|   |-- Pre-request: valida CEP (Regex), seta mockStatus
-|   |-- Tests: valida endereco, salva cidade/estado
-|   |-- Examples: Valido_200, Indisponivel_422
-|
-|-- 4 - Criacao de Pedido
-|   |-- Pre-request: valida produtoId (Regex), seta mockStatus
-|   |-- Tests: valida orderId, salva orderId
-|   |-- Examples: Criado_201, CarrinhoVazio_400
-|
-|-- 5 - Pagamento
-|   |-- Pre-request: valida cartao/boleto/pix (Regex), seta mockStatus
-|   |-- Tests: valida paymentId, salva paymentId
-|   |-- Examples: PIX_200, CartaoVista_200, CartaoParcelado_200,
-|                 Boleto_200, ErroPIX_400, SemSaldo_402, BoletoVencido_410
-|
-|-- 6 - Rastreio do Pedido
-    |-- Pre-request: valida orderId/paymentId (Regex), seta mockStatus
-    |-- Tests: valida tracking code, data entrega
-    |-- Examples: EmTransporte_200, Entregue_200
+E-commerce v2 - Cenarios de Pagamento/
+├── 1 - Login
+├── 2 - Catalogo de Produtos
+├── 3 - Validar Endereco
+├── 4 - Criacao de Pedido
+├── 5a - Pagamento PIX
+├── 5b - Pagamento Boleto
+├── 5c - Pagamento Cartao
+└── 6 - Rastreio do Pedido
 ```
