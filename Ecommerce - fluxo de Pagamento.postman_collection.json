@@ -1,0 +1,743 @@
+{
+	"info": {
+		"_postman_id": "ecommerce-fluxo-pagamento",
+		"name": "Ecommerce - fluxo de Pagamento",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// =============================================",
+					"// PARTE 1: Mapeamento email → dados do fluxo",
+					"// Roda APENAS no Login",
+					"// =============================================",
+					"var requestName = pm.info.requestName;",
+					"",
+					"if (requestName === '1 - Login') {",
+					"    var fluxos = {",
+					"      'sem.token@ecommerce.com':        { password: '',            cep: '01310-100', quantidade: '1', paymentMethod: 'pix',         cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'carrinho.vazio@ecommerce.com':   { password: 'Senha@2026',  cep: '01310-100', quantidade: '0', paymentMethod: 'pix',         cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'cep.invalido@ecommerce.com':     { password: 'Senha@2026',  cep: '99999-999', quantidade: '1', paymentMethod: 'pix',         cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'pix.erro@ecommerce.com':         { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'pix_error',   cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'pix.transporte@ecommerce.com':   { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'pix',         cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'pix.entregue@ecommerce.com':     { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'pix',         cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'entregue'   },",
+					"      'sem.saldo@ecommerce.com':        { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'credit_card', cardNumber: '0000000000000000', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'boleto.vencido@ecommerce.com':   { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'boleto',      cardNumber: '4111111111111111', parcelas: '1', dueDate: '2020-01-01', deliveryStatus: 'transporte' },",
+					"      'pix.sucesso@ecommerce.com':      { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'pix',         cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'cartao.parcelado@ecommerce.com': { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'credit_card', cardNumber: '5555555555554444', parcelas: '3', dueDate: '2026-03-10', deliveryStatus: 'entregue'   },",
+					"      'boleto.ok@ecommerce.com':        { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'boleto',      cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'cartao.avista@ecommerce.com':    { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'credit_card', cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' },",
+					"      'cliente@ecommerce.com':          { password: 'Senha@2026',  cep: '01310-100', quantidade: '1', paymentMethod: 'pix',         cardNumber: '4111111111111111', parcelas: '1', dueDate: '2026-03-10', deliveryStatus: 'transporte' }",
+					"    };",
+					"",
+					"    // Lê do CSV (iterationData) primeiro, fallback para Environment",
+					"    var email = pm.iterationData.get('email') || pm.environment.get('email');",
+					"    pm.environment.set('email', email);",
+					"",
+					"    // Limpa variáveis de fluxo do cenário anterior ANTES de setar o novo",
+					"    var allVars = [",
+					"        'token', 'userId', 'produtoId', 'produtoNome', 'produtoPreco',",
+					"        'endereco', 'cidade', 'estado', 'orderId', 'orderStatus',",
+					"        'paymentId', 'pixCode', 'boletoCode', 'trackingCode',",
+					"        'mockStatus', 'cenario', 'loginStatus', 'catalogoStatus',",
+					"        'enderecoStatus', 'pedidoStatus', 'pagamentoStatus', 'rastreioStatus'",
+					"    ];",
+					"    allVars.forEach(function(v) {",
+					"        pm.environment.set(v, '');",
+					"    });",
+					"    console.log('Todas as variaveis de fluxo foram limpas');",
+					"",
+					"    var dados = fluxos[email];",
+					"    if (dados) {",
+					"        Object.keys(dados).forEach(function(k) {",
+					"            pm.environment.set(k, dados[k]);",
+					"        });",
+					"        console.log('Fluxo carregado para: ' + email);",
+					"    } else {",
+					"        console.warn('Email nao mapeado: ' + email);",
+					"    }",
+					"}",
+					"",
+					"// =============================================",
+					"// PARTE 2: Log e limpeza leve",
+					"// =============================================",
+					"console.log('Executando request: ' + requestName);",
+					"",
+					"if (requestName !== '1 - Login') {",
+					"    // Limpa apenas mockStatus — NÃO limpa cenario!",
+					"    // O cenario é setado no Pre-request de cada item e lido no Tests do mesmo item",
+					"    pm.environment.set('mockStatus', '');",
+					"    console.log('mockStatus limpo');",
+					"}"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "1 - Login",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var email = pm.environment.get('email');",
+							"var password = pm.environment.get('password');",
+							"",
+							"var emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;",
+							"if (!emailRegex.test(email)) {",
+							"    console.log('[AVISO] Email invalido: ' + email);",
+							"}",
+							"",
+							"var passwordRegex = /^(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%&*!])[A-Za-z\\d@#$%&*!]{8,}$/;",
+							"if (!passwordRegex.test(password)) {",
+							"    console.log('[AVISO] Senha nao atende aos requisitos de seguranca');",
+							"}",
+							"",
+							"// Verifica se password está vazio (cenario sem.token)",
+							"if (!password || password === '') {",
+							"    pm.environment.set('mockStatus', '401');",
+							"    console.log('mockStatus definido para 401 (senha vazia - falha de login)');",
+							"} else {",
+							"    pm.environment.set('mockStatus', '200');",
+							"    console.log('mockStatus definido para 200 (login sucesso)');",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var mockStatus = parseInt(pm.environment.get('mockStatus'));",
+							"",
+							"pm.test('Status code is ' + mockStatus, function() {",
+							"    pm.response.to.have.status(mockStatus);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.test('Response has token', function() {",
+							"        pm.expect(jsonData).to.have.property('token');",
+							"    });",
+							"    pm.environment.set('token', jsonData.token);",
+							"    pm.environment.set('userId', jsonData.userId);",
+							"    pm.environment.set('loginStatus', 'sucesso');",
+							"    console.log('Login realizado com sucesso. Token salvo.');",
+							"} else if (pm.response.code === 401) {",
+							"    pm.environment.set('loginStatus', 'falha');",
+							"    console.log('Login falhou - credenciais invalidas ou senha vazia.');",
+							"    postman.setNextRequest(null);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "x-mock-response-code",
+						"value": "{{mockStatus}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/auth/login",
+					"host": ["{{baseUrl}}"],
+					"path": ["auth", "login"]
+				}
+			}
+		},
+		{
+			"name": "2 - Catalogo",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var token = pm.environment.get('token');",
+							"if (!token || token === '') {",
+							"    console.log('[AVISO] Token ausente - pulando Catalogo');",
+							"    postman.setNextRequest(null);",
+							"} else {",
+							"    pm.environment.set('mockStatus', '200');",
+							"    console.log('mockStatus definido para 200 (catalogo)');",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Status code is 200', function() {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.test('Response has products', function() {",
+							"        pm.expect(jsonData).to.have.property('products');",
+							"        pm.expect(jsonData.products).to.be.an('array').that.is.not.empty;",
+							"    });",
+							"    var produto = jsonData.products[0];",
+							"    pm.environment.set('produtoId', produto.id);",
+							"    pm.environment.set('produtoNome', produto.nome);",
+							"    pm.environment.set('produtoPreco', produto.preco);",
+							"    pm.environment.set('catalogoStatus', 'sucesso');",
+							"    console.log('Produto selecionado: ' + produto.id + ' - ' + produto.nome);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "x-mock-response-code",
+						"value": "{{mockStatus}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/products",
+					"host": ["{{baseUrl}}"],
+					"path": ["products"]
+				}
+			}
+		},
+		{
+			"name": "3 - Endereco",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var cep = pm.environment.get('cep');",
+							"var cepRegex = /^\\d{5}-\\d{3}$/;",
+							"if (!cep || !cepRegex.test(cep)) {",
+							"    pm.environment.set('mockStatus', '422');",
+							"    console.log('mockStatus definido para 422 (CEP invalido: ' + cep + ')');",
+							"} else {",
+							"    pm.environment.set('mockStatus', '200');",
+							"    console.log('mockStatus definido para 200 (endereco valido)');",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var mockStatus = parseInt(pm.environment.get('mockStatus'));",
+							"",
+							"pm.test('Status code is ' + mockStatus, function() {",
+							"    pm.response.to.have.status(mockStatus);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set('endereco', jsonData.logradouro);",
+							"    pm.environment.set('cidade', jsonData.cidade);",
+							"    pm.environment.set('estado', jsonData.estado);",
+							"    pm.environment.set('enderecoStatus', 'sucesso');",
+							"    console.log('Endereco obtido: ' + jsonData.logradouro + ', ' + jsonData.cidade);",
+							"} else if (pm.response.code === 422) {",
+							"    pm.environment.set('enderecoStatus', 'falha');",
+							"    console.log('CEP invalido - fluxo encerrado.');",
+							"    postman.setNextRequest(null);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "x-mock-response-code",
+						"value": "{{mockStatus}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"cep\": \"{{cep}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/address/validate",
+					"host": ["{{baseUrl}}"],
+					"path": ["address", "validate"]
+				}
+			}
+		},
+		{
+			"name": "4 - Criacao de Pedido",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var produtoId = pm.environment.get('produtoId');",
+							"var quantidade = pm.environment.get('quantidade');",
+							"var pedidoStatus = pm.environment.get('pedidoStatus');",
+							"",
+							"var prodIdRegex = /^PROD-\\d{3}$/;",
+							"if (!produtoId || !prodIdRegex.test(produtoId)) {",
+							"    console.log('[AVISO] ProdutoId invalido: ' + produtoId);",
+							"    pm.environment.set('mockStatus', '400');",
+							"    console.log('mockStatus definido para 400 (carrinho vazio - produtoId invalido)');",
+							"} else if (!quantidade || quantidade === '0' || parseInt(quantidade, 10) <= 0) {",
+							"    pm.environment.set('mockStatus', '400');",
+							"    console.log('mockStatus definido para 400 (carrinho vazio - quantidade 0)');",
+							"} else if (pedidoStatus === 'falha') {",
+							"    pm.environment.set('mockStatus', '400');",
+							"    console.log('mockStatus definido para 400 (falha de pedido)');",
+							"} else {",
+							"    pm.environment.set('mockStatus', '201');",
+							"    console.log('mockStatus definido para 201 (pedido criado)');",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var mockStatus = parseInt(pm.environment.get('mockStatus'));",
+							"",
+							"pm.test('Status code is ' + mockStatus, function() {",
+							"    pm.response.to.have.status(mockStatus);",
+							"});",
+							"",
+							"if (pm.response.code === 201) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.test('Response has orderId', function() {",
+							"        pm.expect(jsonData).to.have.property('orderId');",
+							"    });",
+							"    pm.environment.set('orderId', jsonData.orderId);",
+							"    pm.environment.set('orderStatus', jsonData.status);",
+							"    pm.environment.set('pedidoStatus', 'sucesso');",
+							"    console.log('Pedido criado: ' + jsonData.orderId);",
+							"} else if (pm.response.code === 400) {",
+							"    pm.environment.set('pedidoStatus', 'falha');",
+							"    console.log('Falha ao criar pedido - carrinho vazio ou dados invalidos.');",
+							"    postman.setNextRequest(null);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "x-mock-response-code",
+						"value": "{{mockStatus}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"produtoId\": \"{{produtoId}}\",\n    \"quantidade\": {{quantidade}},\n    \"endereco\": \"{{endereco}}\",\n    \"cidade\": \"{{cidade}}\",\n    \"estado\": \"{{estado}}\",\n    \"cep\": \"{{cep}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/orders",
+					"host": ["{{baseUrl}}"],
+					"path": ["orders"]
+				}
+			}
+		},
+		{
+			"name": "5 - Pagamento PIX",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var orderId = pm.environment.get('orderId');",
+							"var paymentMethod = pm.environment.get('paymentMethod');",
+							"var pagamentoStatus = pm.environment.get('pagamentoStatus');",
+							"",
+							"var orderIdRegex = /^ORD-\\d{8}-\\d{4}$/;",
+							"if (!orderId || !orderIdRegex.test(orderId)) {",
+							"    console.log('[AVISO] OrderId invalido: ' + orderId);",
+							"    pm.environment.set('mockStatus', '400');",
+							"    console.log('mockStatus definido para 400 (orderId invalido)');",
+							"} else if (paymentMethod === 'pix_error' || pagamentoStatus === 'falha') {",
+							"    pm.environment.set('mockStatus', '400');",
+							"    console.log('mockStatus definido para 400 (erro PIX - paymentMethod: ' + paymentMethod + ')');",
+							"} else {",
+							"    pm.environment.set('mockStatus', '200');",
+							"    console.log('mockStatus definido para 200 (PIX sucesso)');",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var mockStatus = parseInt(pm.environment.get('mockStatus'));",
+							"var paymentMethod = pm.environment.get('paymentMethod');",
+							"",
+							"pm.test('Status code is ' + mockStatus, function() {",
+							"    pm.response.to.have.status(mockStatus);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set('paymentId', jsonData.paymentId);",
+							"    pm.environment.set('pixCode', jsonData.pixCode);",
+							"    if (paymentMethod === 'pix') {",
+							"        pm.environment.set('pagamentoStatus', 'sucesso');",
+							"        console.log('Pagamento PIX realizado. Codigo: ' + jsonData.pixCode);",
+							"    } else {",
+							"        console.log('PIX processado para metodo: ' + paymentMethod + '. Continuando para pagamento especifico.');",
+							"    }",
+							"} else if (pm.response.code === 400) {",
+							"    pm.environment.set('pagamentoStatus', 'falha');",
+							"    console.log('Erro no pagamento PIX.');",
+							"    postman.setNextRequest(null);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "x-mock-response-code",
+						"value": "{{mockStatus}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"method\": \"pix\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/payments/pix",
+					"host": ["{{baseUrl}}"],
+					"path": ["payments", "pix"]
+				}
+			}
+		},
+		{
+			"name": "6 - Pagamento Cartao",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var cardNumber = pm.environment.get('cardNumber');",
+							"var expiryDate = pm.environment.get('expiryDate');",
+							"var cvv = pm.environment.get('cvv');",
+							"var parcelas = parseInt(pm.environment.get('parcelas')) || 1;",
+							"",
+							"console.log('[DEBUG] cardNumber: ' + cardNumber);",
+							"console.log('[DEBUG] parcelas: ' + parcelas);",
+							"",
+							"var cardRegex = /^\\d{16}$/;",
+							"if (!cardRegex.test(cardNumber)) {",
+							"    console.log('[AVISO] Numero de cartao invalido');",
+							"}",
+							"",
+							"var expiryRegex = /^\\d{2}\\/\\d{2}$/;",
+							"if (!expiryRegex.test(expiryDate)) {",
+							"    console.log('[AVISO] Data de validade invalida');",
+							"}",
+							"",
+							"var cvvRegex = /^\\d{3,4}$/;",
+							"if (!cvvRegex.test(cvv)) {",
+							"    console.log('[AVISO] CVV invalido');",
+							"}",
+							"",
+							"if (cardNumber && cardNumber.endsWith('0000')) {",
+							"    pm.environment.set('mockStatus', '402');",
+							"    pm.environment.set('cenario', 'SEM_SALDO');",
+							"    console.log('mockStatus definido para 402 (sem saldo)');",
+							"} else if (parcelas > 1) {",
+							"    pm.environment.set('mockStatus', '200');",
+							"    pm.environment.set('cenario', 'CARTAO_PARCELADO_SUCESSO');",
+							"    console.log('mockStatus definido para 200 (cartao parcelado). Parcelas: ' + parcelas);",
+							"} else {",
+							"    pm.environment.set('mockStatus', '200');",
+							"    pm.environment.set('cenario', 'CARTAO_AVISTA_SUCESSO');",
+							"    console.log('mockStatus definido para 200 (cartao a vista). Parcelas: ' + parcelas);",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var mockStatus = parseInt(pm.environment.get('mockStatus'));",
+							"var cenario = pm.environment.get('cenario');",
+							"",
+							"pm.test('Status code is ' + mockStatus, function() {",
+							"    pm.response.to.have.status(mockStatus);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set('paymentId', jsonData.paymentId);",
+							"    pm.environment.set('pagamentoStatus', 'sucesso');",
+							"    if (cenario === 'CARTAO_PARCELADO_SUCESSO') {",
+							"        pm.test('Pagamento parcelado aprovado', function() {",
+							"            pm.expect(jsonData).to.have.property('parcelas');",
+							"        });",
+							"        console.log('Pagamento parcelado aprovado.');",
+							"    } else {",
+							"        console.log('Pagamento a vista aprovado.');",
+							"    }",
+							"} else if (pm.response.code === 402) {",
+							"    pm.environment.set('pagamentoStatus', 'falha');",
+							"    console.log('Pagamento recusado - sem saldo suficiente.');",
+							"    postman.setNextRequest(null);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "x-mock-response-code",
+						"value": "{{mockStatus}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"method\": \"credit_card\",\n    \"cardNumber\": \"{{cardNumber}}\",\n    \"cardHolder\": \"{{cardHolder}}\",\n    \"expiryDate\": \"{{expiryDate}}\",\n    \"cvv\": \"{{cvv}}\",\n    \"parcelas\": {{parcelas}}\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/payments/credit-card",
+					"host": ["{{baseUrl}}"],
+					"path": ["payments", "credit-card"]
+				}
+			}
+		},
+		{
+			"name": "7 - Pagamento Boleto",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var orderId = pm.environment.get('orderId');",
+							"var dueDate = pm.environment.get('dueDate');",
+							"",
+							"var orderIdRegex = /^ORD-\\d{8}-\\d{4}$/;",
+							"if (!orderId || !orderIdRegex.test(orderId)) {",
+							"    console.log('[AVISO] OrderId invalido: ' + orderId);",
+							"    pm.environment.set('mockStatus', '400');",
+							"    console.log('mockStatus definido para 400 (orderId invalido)');",
+							"} else {",
+							"    var today = new Date();",
+							"    var due = new Date(dueDate);",
+							"    if (due < today) {",
+							"        pm.environment.set('mockStatus', '410');",
+							"        console.log('mockStatus definido para 410 (boleto vencido - dueDate: ' + dueDate + ')');",
+							"    } else {",
+							"        pm.environment.set('mockStatus', '200');",
+							"        console.log('mockStatus definido para 200 (boleto valido)');",
+							"    }",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var mockStatus = parseInt(pm.environment.get('mockStatus'));",
+							"",
+							"pm.test('Status code is ' + mockStatus, function() {",
+							"    pm.response.to.have.status(mockStatus);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set('paymentId', jsonData.paymentId);",
+							"    pm.environment.set('boletoCode', jsonData.boletoCode);",
+							"    pm.environment.set('pagamentoStatus', 'sucesso');",
+							"    console.log('Boleto gerado. Codigo: ' + jsonData.boletoCode);",
+							"} else if (pm.response.code === 410) {",
+							"    pm.environment.set('pagamentoStatus', 'falha');",
+							"    console.log('Boleto vencido - fluxo encerrado.');",
+							"    postman.setNextRequest(null);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "x-mock-response-code",
+						"value": "{{mockStatus}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"method\": \"boleto\",\n    \"dueDate\": \"{{dueDate}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/payments/boleto",
+					"host": ["{{baseUrl}}"],
+					"path": ["payments", "boleto"]
+				}
+			}
+		},
+		{
+			"name": "8 - Rastreio",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var orderId = pm.environment.get('orderId');",
+							"var deliveryStatus = pm.environment.get('deliveryStatus');",
+							"",
+							"var orderIdRegex = /^ORD-\\d{8}-\\d{4}$/;",
+							"if (!orderId || !orderIdRegex.test(orderId)) {",
+							"    console.log('[AVISO] OrderId invalido para rastreio: ' + orderId);",
+							"    pm.environment.set('mockStatus', '404');",
+							"    pm.environment.set('cenario', 'PEDIDO_NAO_ENCONTRADO');",
+							"} else if (deliveryStatus === 'entregue') {",
+							"    pm.environment.set('mockStatus', '200');",
+							"    pm.environment.set('cenario', 'ENTREGUE');",
+							"    console.log('mockStatus definido para 200 (status: ENTREGUE)');",
+							"} else {",
+							"    pm.environment.set('mockStatus', '200');",
+							"    pm.environment.set('cenario', 'EM_TRANSPORTE');",
+							"    console.log('mockStatus definido para 200 (status: EM_TRANSPORTE)');",
+							"}"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var mockStatus = parseInt(pm.environment.get('mockStatus'));",
+							"var cenario = pm.environment.get('cenario');",
+							"",
+							"pm.test('Status code is ' + mockStatus, function() {",
+							"    pm.response.to.have.status(mockStatus);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set('trackingCode', jsonData.trackingCode);",
+							"    pm.environment.set('rastreioStatus', jsonData.status);",
+							"    if (cenario === 'ENTREGUE') {",
+							"        pm.test('Status de entrega é ENTREGUE', function() {",
+							"            pm.expect(jsonData.status).to.eql('ENTREGUE');",
+							"        });",
+							"        console.log('Pedido entregue. Codigo de rastreio: ' + jsonData.trackingCode);",
+							"    } else {",
+							"        pm.test('Status de entrega é EM_TRANSPORTE', function() {",
+							"            pm.expect(jsonData.status).to.eql('EM_TRANSPORTE');",
+							"        });",
+							"        console.log('Pedido em transporte. Codigo de rastreio: ' + jsonData.trackingCode);",
+							"    }",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "x-mock-response-code",
+						"value": "{{mockStatus}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/orders/{{orderId}}/tracking",
+					"host": ["{{baseUrl}}"],
+					"path": ["orders", "{{orderId}}", "tracking"]
+				}
+			}
+		}
+	]
+}
